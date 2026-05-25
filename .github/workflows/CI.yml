@@ -20,7 +20,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     permissions:
-    # needed to allow julia-actions/cache to proactively flush old caches.
+    # Required to allow julia-actions/cache to proactively flush old caches.
       actions: write
       contents: read
     strategy:

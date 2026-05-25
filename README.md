@@ -4,6 +4,7 @@
 [![Build Status](https://github.com/QuantumSavory/BitPackedInstances.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/QuantumSavory/BitPackedInstances.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/QuantumSavory/BitPackedInstances.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/QuantumSavory/BitPackedInstances.jl)
 [![Aqua](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
+[![JET](https://img.shields.io/badge/%F0%9F%9B%A9%EF%B8%8F_tested_with-JET.jl-233f9a)](https://github.com/aviatesk/JET.jl)
 
 BitPackedInstances is lightweight package that facilitates the bit packing of any data types that support the `instances` querying interface via compact and efficient `@generated` implementations. The provided experience largely resembles that of a typical dictionary to the extent permissible by the prolific abuse of the `Julia` type system that is required in order to achieve the desired functionality.
 

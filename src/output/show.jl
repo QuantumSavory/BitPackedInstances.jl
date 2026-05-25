@@ -20,7 +20,7 @@ function Base.show(
 			"PackedInstancesValuesIterator"
 			)
 	else
-		# Mimicing the base library behaviour.
+		# Mimicking the base library behaviour.
 		output = ""
 		first_entry = true
 		counter = ifelse(
