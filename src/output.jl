@@ -1,12 +1,6 @@
 
 #==============================================================================#
 
-name = "BitPackedInstances"
-uuid = "4367d3ae-5d96-4441-94f8-c197a4364aab"
-authors = ["BitPackedInstances contributors"]
-version = "0.1.0"
-
-[compat]
-julia = "1.12"
+include("output/show.jl")
 
 #==============================================================================#

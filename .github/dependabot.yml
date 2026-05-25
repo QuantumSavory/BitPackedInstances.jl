@@ -1,3 +1,6 @@
+
+#==============================================================================#
+
 # https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
 version: 2
 updates:
@@ -5,7 +8,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    # To group all GitHub Actions updates into a single PR, uncomment the following:
+    # To group all GitHub Actions updates into a single PR, uncomment.
     # groups:
     #   github-actions:
     #     patterns:
@@ -17,8 +20,10 @@ updates:
       - "/test"
     schedule:
       interval: "weekly"
-    # To group all Julia dependency updates into a single PR, uncomment the following:
+    # To group all Julia dependency updates into a single PR, uncomment.
     # groups:
     #   julia-dependencies:
     #     patterns:
     #       - "*"
+
+#==============================================================================#

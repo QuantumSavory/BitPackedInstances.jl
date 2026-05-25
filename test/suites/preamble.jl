@@ -1,0 +1,57 @@
+
+#==============================================================================#
+
+#===============================================================================
+ENUMERATIONS
+===============================================================================#
+
+# Various types and number of instances.
+@enum EnumA::Int8 begin a_1; a_2; end
+@enum EnumB::UInt8 begin b_1; b_2; b_3; end
+@enum EnumC::Int16 begin c_1; c_2; c_3; c_4; end
+@enum EnumD::UInt16 begin d_1; d_2; d_3; d_4; d_5; end
+@enum EnumE::Int32 begin e_1; e_2; e_3; e_4; e_5; e_6; end
+@enum EnumF::UInt32 begin f_1; f_2; f_3; f_4; f_5; f_6; f_7; end
+@enum EnumG::Int64 begin g_1; g_2; g_3; g_4; g_5; g_6; g_7; g_8; end
+
+# Unordered, not an arithmetic progression.
+@enum Primes::UInt64 begin
+	seven = 7;
+	three = 3;
+	two = 2;
+	five = 5;
+	eleven = 11;
+end
+
+# Consumes no bits to encode.
+@enum SingletonA begin a_singleton; end
+@enum SingletonB begin b_singleton; end
+@enum SingletonC begin c_singleton; end
+@enum SingletonD begin d_singleton; end
+
+#===============================================================================
+PACKAGES
+===============================================================================#
+
+# CAUTION: Ensure the encoded types are defined before importing.
+using BitPackedInstances
+using Test
+using Random: randperm, randsubseq
+
+#===============================================================================
+CONFIGURATION
+===============================================================================#
+
+const benevolent_types = [
+	EnumA, EnumB, EnumC, EnumD, EnumE, EnumF, EnumG, Primes,
+	SingletonA, SingletonB, SingletonC, SingletonD
+	]
+
+const malevolent_types = [
+	Nothing, Bool, Type, Symbol
+	]
+
+# Sufficiently thorough sampling.
+const round_count = 0x40
+
+#==============================================================================#
