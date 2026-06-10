@@ -31,7 +31,8 @@ function test_randomised(
 			values_iterator = values(reference_bit_pack)
 			new_type = rand(types_to_avoid)
 
-			output = keytype(reference_bit_pack) == eltype(selected_types)
+			output = keys_iterator == eachindex(reference_bit_pack)
+			output &= keytype(reference_bit_pack) == eltype(selected_types)
 			output &= valtype(reference_bit_pack) == eltype(content)
 			output &= all(in(selected_types), keys_iterator)
 			output &= all(in(content), values_iterator)
@@ -52,6 +53,23 @@ function test_randomised(
 			output &= !isnothing(copy(values_iterator))
 			output &= !isnothing(copy(reference_bit_pack))
 			output &= !isnothing(copy(wrap(reference_bit_pack)))
+
+			# Certain execution paths are guarded by the calling routine.
+			output &= all(
+				x -> first(x) || isone(last(x)),
+				BitPackedInstances.check_arithmetic_progression.(
+					selected_types
+					)
+				)
+			@inbounds selected_singletons = selected_types[
+				isone.(length.(instances.(selected_types)))
+				]
+			output &= all(
+				x -> zero(UInt64) === BitPackedInstances.bits_from_value(
+					UInt64, first(instances(x)), Val(0x0)
+					),
+				selected_singletons
+				)
 		end
 
 		# Permutation invariance.
@@ -79,11 +97,12 @@ function test_randomised(
 				hash(wrap(reference_bit_pack)) == hash(wrap(permuted))
 		end
 
-		# Either encode directly or start empty and then augment.
+		# Either encode directly or start vacant and then augment.
 		@test begin
-			empty = PackedInstances(UInt64)
-			full = PackedInstances(empty, content...)
-			iszero(empty.bits) && reference_bit_pack == full
+			vacant = PackedInstances(UInt64)
+			full = PackedInstances(vacant, content...)
+			vacant.bits = xor(one(UInt64), vacant.bits)
+			isone(vacant.bits) && reference_bit_pack == full
 		end
 
 		# Either encode directly or encode partially and then augment.
@@ -168,6 +187,31 @@ function test_randomised(
 			output
 		end
 
+		# Access mechanism invariance.
+		if !isempty(selected_types)
+			@test begin
+			new_content = map(x -> rand(instances(x)), selected_types)
+			via_index = copy(reference_bit_pack)
+			via_property = copy(reference_bit_pack)
+
+			output = all(
+				x ->
+					getproperty(reference_bit_pack, first(x)) ==
+						reference_bit_pack[last(x)],
+				zip(Symbol.(selected_types), selected_types)
+				)
+
+			for (property_name, key, value) in zip(
+				Symbol.(selected_types), selected_types, new_content
+				)
+				via_index[key] = value
+				setproperty!(via_property, property_name, value)
+			end
+
+			output &= via_index == via_property
+			end
+		end
+
 		# Potential accidents that may transpire.
 		if consumed_capacity(reference_bit_pack) > 0x8
 			@test begin
@@ -193,11 +237,20 @@ function test_randomised(
 		if !isempty(leftover_types)
 			@test begin
 				consumed = consumed_capacity(reference_bit_pack)
-				new_type = first(leftover_types)
+				new_type = rand(leftover_types)
 				new_value = rand(instances(new_type))
 				augmented = PackedInstances(reference_bit_pack, new_value)
 				consumed_capacity(augmented) ==
 					consumed + encoding_bits(new_type)
+			end
+
+			# This displays an error message in the logs, perfectly benign.
+			@test_throws KeyError begin
+				new_type = rand(leftover_types)
+				new_value = rand(instances(new_type))
+				bit_pack = copy(reference_bit_pack)
+				@info "The following error message is intentional."
+				bit_pack[new_type] = new_value
 			end
 		end
 

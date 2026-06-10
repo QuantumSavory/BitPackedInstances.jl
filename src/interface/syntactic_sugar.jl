@@ -95,7 +95,7 @@ PROPERTY
 ===============================================================================#
 
 @inline function Base.propertynames(
-	bit_pack::PackedInstances{U, T}; private::Bool = false
+	bit_pack::PackedInstances{U, T}, private::Bool = false
 	) where {U <: Unsigned, T <: Tuple}
 
 	content = Symbol.(canonical_form(fieldtypes(T)))

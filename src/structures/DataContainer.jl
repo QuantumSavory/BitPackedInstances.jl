@@ -14,14 +14,6 @@ struct _DataContainer{U <: Unsigned, T <: Tuple}
 
 	end
 
-	@inline function _DataContainer(
-		source::_DataContainer{U, T}
-		) where {U <: Unsigned, T <: Tuple}
-
-		return new{U, T}(source.bits)
-
-	end
-
 end
 
 #==============================================================================#
