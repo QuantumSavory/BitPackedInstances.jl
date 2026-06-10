@@ -10,6 +10,7 @@ The format of this file is based on [Keep a Changelog](https://keepachangelog.co
 - Modify [`CHANGELOG.md`](CHANGELOG.md) to conform with [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) guidelines.
 
 ### Fixed
+- Rectify non-compliant function signature for querying property names.
 - Rectify equivalence issue when hashing key iterator inputs.
 
 ## [0.1.0] - 2026-05-30

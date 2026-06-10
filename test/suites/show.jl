@@ -13,11 +13,16 @@ function test_show(
 	display_range = Base.OneTo.(display_dimensions)
 	mime_type = MIME("text/plain")
 
-	for _ in Base.OneTo(round_count)
+	for round_number in Base.OneTo(round_count)
 
-		# Random length sequence of randomly selected types.
-		selected = Base.first(randperm(type_count), rand(interval))
-		@inbounds selected_types = types_to_sample[selected]
+		if iseven(round_number)
+			# Random length sequence of randomly selected types.
+			selected = Base.first(randperm(type_count), rand(interval))
+			@inbounds selected_types = types_to_sample[selected]
+		else
+			# Encode everything permissible.
+			selected_types = types_to_sample
+		end
 
 		# Sets the baseline for further tests.
 		content = map(x -> rand(instances(x)), selected_types)
@@ -84,6 +89,16 @@ function test_show(
 				x -> repr(mime_type, x; context = compact_io), collection
 				)
 			all(!contains(":\n"), collection_repr)
+		end
+
+		if length(bit_pack) > 0x8
+			# Succinct, non-"text/plain".
+			@test begin
+				collection_repr = map(
+					x -> repr(x; context = succinct_io), collection
+					)
+				all(contains("…"), collection_repr)
+			end
 		end
 
 		if !isempty(bit_pack)

@@ -29,6 +29,41 @@ end
 @enum SingletonC begin c_singleton; end
 @enum SingletonD begin d_singleton; end
 
+# Output display width handling.
+@enum Hippopotomonstrosesquippedaliophobia begin
+	short_value
+end
+@enum ShortKey begin
+	pneumonoultramicroscopicsilicovolcanoconiosis
+end
+
+#===============================================================================
+CUSTOM
+===============================================================================#
+
+# Support should not be restricted to built-in types.
+struct CustomInstances
+
+	bits::UInt8
+
+	_a_instance() = new(0x1)
+	_b_instance() = new(0x2)
+	_c_instance() = new(0x4)
+	_d_instance() = new(0x8)
+
+	global const a_instance = _a_instance()
+	global const b_instance = _b_instance()
+	global const c_instance = _c_instance()
+	global const d_instance = _d_instance()
+
+end
+
+function Base.instances(::Type{CustomInstances})
+
+	return (a_instance, b_instance, c_instance, d_instance)
+
+end
+
 #===============================================================================
 PACKAGES
 ===============================================================================#
@@ -44,7 +79,8 @@ CONFIGURATION
 
 const benevolent_types = [
 	EnumA, EnumB, EnumC, EnumD, EnumE, EnumF, EnumG, Primes,
-	SingletonA, SingletonB, SingletonC, SingletonD
+	SingletonA, SingletonB, SingletonC, SingletonD,
+	Hippopotomonstrosesquippedaliophobia, ShortKey, CustomInstances
 	]
 
 const malevolent_types = [
