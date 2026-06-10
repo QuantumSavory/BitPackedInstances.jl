@@ -55,8 +55,9 @@ bit_pack = discard(bit_pack, Mood)
 @enum Catastrophy begin impossible; end
 # Failure awaits whoever attempts.
 try
-    bit_pack(UInt, impossible)
+	PackedInstances(UInt, impossible)
+	@assert false
 catch error
-    @assert error isa MethodError
+	@assert error isa MethodError
 end
 ```

@@ -98,10 +98,11 @@ EQUALITY
 ===============================================================================#
 
 @inline function Base.:(==)(
-	::PackedInstancesKeysIterator{T_L}, ::PackedInstancesKeysIterator{T_R}
-	) where {T_L <: Tuple, T_R <: Tuple}
+	left::PackedInstancesKeysIterator, right::PackedInstancesKeysIterator
+	)
 
-	return canonical_form(fieldtypes(T_L)) == canonical_form(fieldtypes(T_R))
+	return length(left) == length(right) &&
+		all(x -> first(x) == last(x), zip(left, right))
 
 end
 
@@ -135,11 +136,14 @@ HASH
 ===============================================================================#
 
 @inline function Base.hash(
-	keys_iterator::PackedInstancesKeysIterator{T}, admixture::UInt
-	) where {T <: Tuple}
+	keys_iterator::PackedInstancesKeysIterator, admixture::UInt
+	)
 
 	output = hash(PackedInstancesKeysIterator, admixture)
-	return hash(T, output)
+	for key in keys_iterator
+		output = hash(key, output)
+	end
+	return output
 
 end
 
@@ -180,4 +184,3 @@ end
 end
 
 #==============================================================================#
-

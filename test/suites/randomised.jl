@@ -54,6 +54,31 @@ function test_randomised(
 			output &= !isnothing(copy(wrap(reference_bit_pack)))
 		end
 
+		# Permutation invariance.
+		@test begin
+			@inbounds permuted = PackedInstances(
+				UInt64, content[randperm(selection_count)]...
+				)
+
+			output = reference_bit_pack == permuted
+			output &= reference_bit_pack == unwrap(wrap(permuted))
+			output &= wrap(reference_bit_pack) == wrap(permuted)
+			output &= keys(reference_bit_pack) == keys(permuted)
+			output &= values(reference_bit_pack) == values(permuted)
+			output &= eltype(reference_bit_pack) == Pair{
+				keytype(permuted), valtype(permuted)
+				}
+
+			output &=
+				hash(keys(reference_bit_pack)) == hash(keys(permuted))
+			output &=
+				hash(values(reference_bit_pack)) == hash(values(permuted))
+			output &=
+				hash(reference_bit_pack) == hash(permuted)
+			output &=
+				hash(wrap(reference_bit_pack)) == hash(wrap(permuted))
+		end
+
 		# Either encode directly or start empty and then augment.
 		@test begin
 			empty = PackedInstances(UInt64)
@@ -108,7 +133,7 @@ function test_randomised(
 			output
 		end
 
-		# Invariance and type conversion.
+		# Type invariance.
 		@test begin
 			consumed = consumed_capacity(reference_bit_pack)
 			available = available_capacity(reference_bit_pack)
