@@ -2,7 +2,7 @@
 #==============================================================================#
 
 # Figure out the parameters of the arithmetic progression, if it is possible.
-# CAUTION: Always check the validity before proceeding.
+# CAUTION: The provided type must not be a singleton.
 function check_arithmetic_progression(
 	X::Type
 	)
@@ -19,38 +19,36 @@ function check_arithmetic_progression(
 		values = instances(X)
 
 		# Can potentially throw during casting to integral type or promotion.
-		S = promote_type(typeof.(Integer.(values))...)
+		S = promote_type(map(x -> typeof(Integer(x)), values)...)
 		# Can potentially throw during casting to this specific type.
-		integral_values = S.(values)
+		integral_values = (S(x) for x in values)
 		# Can potentially throw during casting back.
-		values == X.(integral_values) || return output
+		all(
+			x -> first(x) == X(last(x)), zip(values, integral_values)
+			) || return output
 
-		if isone(length(integral_values))
-			# CAUTION: Singletons ought to be handled separately.
-			output = (
+		# Proper validation is incredibly complicated, simply test as is.
+		count = length(integral_values)
+		count -= one(count)
+		upper = Iterators.drop(integral_values, one(count))
+		lower = Iterators.take(integral_values, count)
+		differences = (first(x) - last(x) for x in zip(upper, lower))
+
+		# TODO: There has to be a cleaner way to achieve this.
+		U = typeof(Unsigned(zero(S)))
+		offset = reinterpret(U, first(integral_values))
+		stride = reinterpret(U, first(differences))
+
+		output = ifelse(
+			allequal(differences) && issorted(integral_values),
+			(
 				validity = true,
 				common_type = S,
-				offset = first(integral_values),
-				stride = one(S)
-				)
-		else
-			# CAUTION: Instances may have ordered values in disordered definition.
-			integral_values = sort(integral_values)
-			reverse_values = Iterators.reverse(integral_values)
-			upper = Base.rest(integral_values, last(iterate(integral_values)))
-			lower = Base.rest(reverse_values, last(iterate(reverse_values)))
-			differences = upper .- lower
-			output = ifelse(
-				allequal(differences),
-				(
-					validity = true,
-					common_type = S,
-					offset = first(integral_values),
-					stride = first(differences)
-				),
-				output
-				)
-		end
+				offset = offset,
+				stride = stride
+			),
+			output
+			)
 	catch
 		# Nothing need be done here.
 	end

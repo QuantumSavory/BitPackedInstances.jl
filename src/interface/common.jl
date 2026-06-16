@@ -5,27 +5,60 @@
 COPY
 ===============================================================================#
 
+# CAUTION: Proper syntax for nested parametric typing.
 @inline function Base.copy(
-	keys_iterator::PackedInstancesKeysIterator
+	input::Union{
+		PackedInstancesKeysIterator,
+		Iterators.Reverse{<: PackedInstancesKeysIterator}
+		}
 	)
 
-	return PackedInstancesKeysIterator(keys_iterator)
+	if input isa Iterators.Reverse
+		direction = Iterators.reverse
+		keys_iterator = input.itr
+	else
+		direction = identity
+		keys_iterator = input
+	end
+	return direction(PackedInstancesKeysIterator(keys_iterator))
 
 end
 
+# CAUTION: Proper syntax for nested parametric typing.
 @inline function Base.copy(
-	values_iterator::PackedInstancesValuesIterator
+	input::Union{
+		PackedInstancesValuesIterator,
+		Iterators.Reverse{<: PackedInstancesValuesIterator}
+		}
 	)
 
-	return PackedInstancesValuesIterator(values_iterator)
+	if input isa Iterators.Reverse
+		direction = Iterators.reverse
+		values_iterator = input.itr
+	else
+		direction = identity
+		values_iterator = input
+	end
+	return direction(PackedInstancesValuesIterator(values_iterator))
 
 end
 
+# CAUTION: Proper syntax for nested parametric typing.
 @inline function Base.copy(
-	bit_pack::PackedInstances
+	input::Union{
+		PackedInstances,
+		Iterators.Reverse{<: PackedInstances}
+		}
 	)
 
-	return PackedInstances(bit_pack)
+	if input isa Iterators.Reverse
+		direction = Iterators.reverse
+		bit_pack = input.itr
+	else
+		direction = identity
+		bit_pack = input
+	end
+	return direction(PackedInstances(bit_pack))
 
 end
 
@@ -70,7 +103,10 @@ ELTYPE
 ===============================================================================#
 
 @inline function Base.eltype(
-	::PackedInstancesKeysIterator{T}
+	::Union{
+		PackedInstancesKeysIterator{T},
+		Iterators.Reverse{PackedInstancesKeysIterator{T}}
+		}
 	) where {T <: Tuple}
 
 	return eltype(fieldtypes(T))
@@ -78,17 +114,25 @@ ELTYPE
 end
 
 @inline function Base.eltype(
-	::PackedInstancesValuesIterator{U, T}
+	::Union{
+		PackedInstancesValuesIterator{U, T},
+		Iterators.Reverse{PackedInstancesValuesIterator{U, T}}
+		}
 	) where {U <: Unsigned, T <: Tuple}
 
 	return eltype(map(x -> first(instances(x)), fieldtypes(T)))
 
 end
 
+# CAUTION: Proper syntax for nested parametric typing.
 @inline function Base.eltype(
-	bit_pack::PackedInstances
+	input::Union{
+		PackedInstances,
+		Iterators.Reverse{<: PackedInstances}
+		}
 	)
 
+	bit_pack = input isa Iterators.Reverse ? input.itr : input
 	return Pair{keytype(bit_pack), valtype(bit_pack)}
 
 end
@@ -98,7 +142,8 @@ EQUALITY
 ===============================================================================#
 
 @inline function Base.:(==)(
-	left::PackedInstancesKeysIterator, right::PackedInstancesKeysIterator
+	left::PackedInstancesKeysIterator,
+	right::PackedInstancesKeysIterator
 	)
 
 	return length(left) == length(right) &&
@@ -106,8 +151,20 @@ EQUALITY
 
 end
 
+# CAUTION: Proper syntax for nested parametric typing.
 @inline function Base.:(==)(
-	left::PackedInstancesValuesIterator, right::PackedInstancesValuesIterator
+	left::Iterators.Reverse{<: PackedInstancesKeysIterator},
+	right::Iterators.Reverse{<: PackedInstancesKeysIterator}
+	)
+
+	return length(left.itr) == length(right.itr) &&
+		all(x -> first(x) == last(x), zip(left.itr, right.itr))
+
+end
+
+@inline function Base.:(==)(
+	left::PackedInstancesValuesIterator,
+	right::PackedInstancesValuesIterator
 	)
 
 	return length(left) == length(right) &&
@@ -115,16 +172,39 @@ end
 
 end
 
+# CAUTION: Proper syntax for nested parametric typing.
 @inline function Base.:(==)(
-	left::PackedInstances, right::PackedInstances
+	left::Iterators.Reverse{<: PackedInstancesValuesIterator},
+	right::Iterators.Reverse{<: PackedInstancesValuesIterator}
+	)
+
+	return length(left.itr) == length(right.itr) &&
+		all(x -> first(x) == last(x), zip(left.itr, right.itr))
+
+end
+
+@inline function Base.:(==)(
+	left::PackedInstances,
+	right::PackedInstances
 	)
 
 	return values(left) == values(right)
 
 end
 
+# CAUTION: Proper syntax for nested parametric typing.
 @inline function Base.:(==)(
-	left::PackedInstancesContainer, right::PackedInstancesContainer
+	left::Iterators.Reverse{<: PackedInstances},
+	right::Iterators.Reverse{<: PackedInstances}
+	)
+
+	return values(left.itr) == values(right.itr)
+
+end
+
+@inline function Base.:(==)(
+	left::PackedInstancesContainer,
+	right::PackedInstancesContainer
 	)
 
 	return PackedInstances(left) == PackedInstances(right)
@@ -135,11 +215,23 @@ end
 HASH
 ===============================================================================#
 
+# CAUTION: Proper syntax for nested parametric typing.
 @inline function Base.hash(
-	keys_iterator::PackedInstancesKeysIterator, admixture::UInt
+	input::Union{
+		PackedInstancesKeysIterator,
+		Iterators.Reverse{<: PackedInstancesKeysIterator}
+		},
+	admixture::UInt
 	)
 
-	output = hash(PackedInstancesKeysIterator, admixture)
+	if input isa Iterators.Reverse
+		hashed_type = Iterators.Reverse{PackedInstancesKeysIterator}
+		keys_iterator = input.itr
+	else
+		hashed_type = PackedInstancesKeysIterator
+		keys_iterator = input
+	end
+	output = hash(hashed_type, admixture)
 	for key in keys_iterator
 		output = hash(key, output)
 	end
@@ -147,11 +239,23 @@ HASH
 
 end
 
+# CAUTION: Proper syntax for nested parametric typing.
 @inline function Base.hash(
-	values_iterator::PackedInstancesValuesIterator, admixture::UInt
+	input::Union{
+		PackedInstancesValuesIterator,
+		Iterators.Reverse{<: PackedInstancesValuesIterator}
+		},
+	admixture::UInt
 	)
 
-	output = hash(PackedInstancesValuesIterator, admixture)
+	if input isa Iterators.Reverse
+		hashed_type = Iterators.Reverse{PackedInstancesValuesIterator}
+		values_iterator = input.itr
+	else
+		hashed_type = PackedInstancesValuesIterator
+		values_iterator = input
+	end
+	output = hash(hashed_type, admixture)
 	for value in values_iterator
 		output = hash(value, output)
 	end
@@ -159,11 +263,23 @@ end
 
 end
 
+# CAUTION: Proper syntax for nested parametric typing.
 @inline function Base.hash(
-	bit_pack::PackedInstances, admixture::UInt
+	input::Union{
+		PackedInstances,
+		Iterators.Reverse{<: PackedInstances}
+		},
+	admixture::UInt
 	)
 
-	output = hash(PackedInstances, admixture)
+	if input isa Iterators.Reverse
+		hashed_type = Iterators.Reverse{PackedInstances}
+		bit_pack = input.itr
+	else
+		hashed_type = PackedInstances
+		bit_pack = input
+	end
+	output = hash(hashed_type, admixture)
 	for (_, value) in bit_pack
 		output = hash(value, output)
 	end

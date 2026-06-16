@@ -6,16 +6,21 @@ ITERATE
 ===============================================================================#
 
 @inline function Base.iterate(
-	::PackedInstancesKeysIterator{T},
-	state::Integer = firstindex(fieldtypes(T))
+	input::Union{
+		PackedInstancesKeysIterator{T},
+		Iterators.Reverse{PackedInstancesKeysIterator{T}}
+		},
+	state::Integer = input isa Iterators.Reverse ?
+		lastindex(fieldtypes(T)) : firstindex(fieldtypes(T))
 	) where {T <: Tuple}
 
 	content = canonical_form(fieldtypes(T))
+	successor = input isa Iterators.Reverse ? prevind : nextind
 	@inbounds output =
 		(state in eachindex(content)) ?
 		(
 			content[state],
-			nextind(content, state)
+			successor(content, state)
 		) :
 		nothing
 	return output
@@ -23,16 +28,27 @@ ITERATE
 end
 
 @inline function Base.iterate(
-	values_iterator::PackedInstancesValuesIterator{U, T},
-	state::Integer = firstindex(fieldtypes(T))
+	input::Union{
+		PackedInstancesValuesIterator{U, T},
+		Iterators.Reverse{PackedInstancesValuesIterator{U, T}}
+		},
+	state::Integer = input isa Iterators.Reverse ?
+		lastindex(fieldtypes(T)) : firstindex(fieldtypes(T))
 	) where {U <: Unsigned, T <: Tuple}
 
 	content = canonical_form(fieldtypes(T))
+	if input isa Iterators.Reverse
+		bit_pack = input.itr.bit_pack[]
+		successor = prevind
+	else
+		bit_pack = input.bit_pack[]
+		successor = nextind
+	end
 	@inbounds output =
 		(state in eachindex(content)) ?
 		(
-			values_iterator.bit_pack[][content[state]],
-			nextind(content, state)
+			bit_pack[content[state]],
+			successor(content, state)
 		) :
 		nothing
 	return output
@@ -40,73 +56,27 @@ end
 end
 
 @inline function Base.iterate(
-	bit_pack::PackedInstances{U, T},
-	state::Integer = firstindex(fieldtypes(T))
+	input::Union{
+		PackedInstances{U, T},
+		Iterators.Reverse{PackedInstances{U, T}}
+		},
+	state::Integer = input isa Iterators.Reverse ?
+		lastindex(fieldtypes(T)) : firstindex(fieldtypes(T))
 	) where {U <: Unsigned, T <: Tuple}
 
 	content = canonical_form(fieldtypes(T))
+	if input isa Iterators.Reverse
+		bit_pack = input.itr
+		successor = prevind
+	else
+		bit_pack = input
+		successor = nextind
+	end
 	@inbounds output =
 		(state in eachindex(content)) ?
 		(
 			(content[state], bit_pack[content[state]]),
-			nextind(content, state)
-		) :
-		nothing
-	return output
-
-end
-
-@inline function Base.iterate(
-	::Iterators.Reverse{
-		PackedInstancesKeysIterator{T}
-		},
-	state::Integer = lastindex(fieldtypes(T))
-	) where {T <: Tuple}
-
-	content = canonical_form(fieldtypes(T))
-	@inbounds output =
-		(state in eachindex(content)) ?
-		(
-			content[state],
-			prevind(content, state)
-		) :
-		nothing
-	return output
-
-end
-
-@inline function Base.iterate(
-	values_iterator::Iterators.Reverse{
-		PackedInstancesValuesIterator{U, T}
-		},
-	state::Integer = lastindex(fieldtypes(T))
-	) where {U <: Unsigned, T <: Tuple}
-
-	content = canonical_form(fieldtypes(T))
-	@inbounds output =
-		(state in eachindex(content)) ?
-		(
-			values_iterator.itr.bit_pack[][content[state]],
-			prevind(content, state)
-		) :
-		nothing
-	return output
-
-end
-
-@inline function Base.iterate(
-	bit_pack::Iterators.Reverse{
-		PackedInstances{U, T}
-		},
-	state::Integer = lastindex(fieldtypes(T))
-	) where {U <: Unsigned, T <: Tuple}
-
-	content = canonical_form(fieldtypes(T))
-	@inbounds output =
-		(state in eachindex(content)) ?
-		(
-			(content[state], bit_pack.itr[content[state]]),
-			prevind(content, state)
+			successor(content, state)
 		) :
 		nothing
 	return output
@@ -117,9 +87,14 @@ end
 ISDONE
 ===============================================================================#
 
+# Split separately in order to avoid unbound type parameters.
 @inline function Base.isdone(
-	::PackedInstancesKeysIterator{T},
-	state::Integer = firstindex(fieldtypes(T))
+	input::Union{
+		PackedInstancesKeysIterator{T},
+		Iterators.Reverse{PackedInstancesKeysIterator{T}}
+		},
+	state::Integer = input isa Iterators.Reverse ?
+		lastindex(fieldtypes(T)) : firstindex(fieldtypes(T))
 	) where {T <: Tuple}
 
 	return !(state in eachindex(fieldtypes(T)))
@@ -127,50 +102,14 @@ ISDONE
 end
 
 @inline function Base.isdone(
-	::PackedInstancesValuesIterator{U, T},
-	state::Integer = firstindex(fieldtypes(T))
-	) where {U <: Unsigned, T <: Tuple}
-
-	return !(state in eachindex(fieldtypes(T)))
-
-end
-
-@inline function Base.isdone(
-	::PackedInstances{U, T},
-	state::Integer = firstindex(fieldtypes(T))
-	) where {U <: Unsigned, T <: Tuple}
-
-	return !(state in eachindex(fieldtypes(T)))
-
-end
-
-@inline function Base.isdone(
-	::Iterators.Reverse{
-		PackedInstancesKeysIterator{T}
+	input::Union{
+		PackedInstancesValuesIterator{U, T},
+		Iterators.Reverse{PackedInstancesValuesIterator{U, T}},
+		PackedInstances{U, T},
+		Iterators.Reverse{PackedInstances{U, T}}
 		},
-	state::Integer = lastindex(fieldtypes(T))
-	) where {T <: Tuple}
-
-	return !(state in eachindex(fieldtypes(T)))
-
-end
-
-@inline function Base.isdone(
-	::Iterators.Reverse{
-		PackedInstancesValuesIterator{U, T}
-		},
-	state::Integer = lastindex(fieldtypes(T))
-	) where {U <: Unsigned, T <: Tuple}
-
-	return !(state in eachindex(fieldtypes(T)))
-
-end
-
-@inline function Base.isdone(
-	::Iterators.Reverse{
-		PackedInstances{U, T}
-		},
-	state::Integer = lastindex(fieldtypes(T))
+	state::Integer = input isa Iterators.Reverse ?
+		lastindex(fieldtypes(T)) : firstindex(fieldtypes(T))
 	) where {U <: Unsigned, T <: Tuple}
 
 	return !(state in eachindex(fieldtypes(T)))

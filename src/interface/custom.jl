@@ -156,10 +156,10 @@ false
 
 	existing_data_types = fieldtypes(T)
 	# Eliminate redundancy and Type{X} wrapper.
-	discarded_data_types = unique(unwrap_type.(collect(keys)))
+	discarded_data_types = unique((unwrap_type(x) for x in keys))
 	# Retain only pertinent data.
 	discarded_data_types =
-		filter!(in(existing_data_types), discarded_data_types)
+		filter(in(existing_data_types), discarded_data_types)
 	data_types = filter(!in(discarded_data_types), existing_data_types)
 	tuple_type = Tuple{data_types...}
 
@@ -174,13 +174,17 @@ false
 			data_container = _DataContainer(zero(U), Tuple{})
 			return PackedInstances(data_container)
 			end
-	elseif iszero(sum(required_bits.(discarded_data_types); init = zero(U)))
+	elseif iszero(
+		sum((required_bits(x) for x in discarded_data_types); init = zero(U))
+		)
 		# No need to worry about overflow as discard is contained in existing.
+
 		# Whatever is being discarded is encoded with nil bits.
 		return quote
 			data_container = _DataContainer(bit_pack.bits, $tuple_type)
 			return PackedInstances(data_container)
 			end
+
 	end
 
 	#===========================================================================
@@ -215,7 +219,7 @@ false
 
 	# Utilised in setting up the output bits.
 	shift = popfirst!(segment_shifts)
-	mask = mask_bit_range(U, shift)
+	mask = mask_bit_range(U, shift, zero(U))
 
 	if varieties_index == nextind(
 		segment_varieties, firstindex(segment_varieties)
@@ -257,7 +261,7 @@ false
 		read_shift = shift
 		# Next segment is guaranteed to be true, just take its shift.
 		shift, _ = (popfirst!(segment_shifts), popfirst!(segment_varieties))
-		mask = mask_bit_range(U, shift)
+		mask = mask_bit_range(U, shift, zero(U))
 		output = quote
 			$output
 			bits &= $mask
@@ -322,7 +326,7 @@ false
 	output = false
 	try
 		# Verifies whether `@generated` functions are operational.
-		value_from_bits(X, UInt(0x0), Val(0x0))
+		value_from_bits(X, 0x0, Val(0x0), Val(false))
 		output = true
 	catch
 		# Nothing need be done here.
@@ -370,12 +374,12 @@ false
 	) where {U <: Unsigned, T <: Tuple}
 
 	available_bits = bit_count(U) - convert(
-		U, sum(required_bits.(fieldtypes(T)); init = zero(U))
+		U, sum((required_bits(x) for x in fieldtypes(T)); init = zero(U))
 		)
 	output = false
 	try
 		# Verifies whether `@generated` functions are operational.
-		value_from_bits(X, UInt(0x0), Val(0x0))
+		value_from_bits(X, 0x0, Val(0x0), Val(false))
 		output = X in fieldtypes(T) || required_bits(X) <= available_bits
 	catch
 		# Nothing need be done here.
@@ -418,7 +422,7 @@ true
 	output = missing
 	try
 		# Verifies whether `@generated` functions are operational.
-		value_from_bits(X, UInt(0x0), Val(0x0))
+		value_from_bits(X, 0x0, Val(0x0), Val(false))
 		output = required_bits(X)
 	catch
 		# Nothing need be done here.
@@ -485,7 +489,9 @@ true
 	::Union{PackedInstances{U, T}, Type{PackedInstances{U, T}}}
 	) where {U <: Unsigned, T <: Tuple}
 
-	return convert(U, sum(required_bits.(fieldtypes(T)); init = zero(U)))
+	return convert(
+		U, sum((required_bits(x) for x in fieldtypes(T)); init = zero(U))
+		)
 
 end
 
@@ -518,7 +524,7 @@ true
 	) where {U <: Unsigned, T <: Tuple}
 
 	return bit_count(U) - convert(
-		U, sum(required_bits.(fieldtypes(T)); init = zero(U))
+		U, sum((required_bits(x) for x in fieldtypes(T)); init = zero(U))
 		)
 
 end

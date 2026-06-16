@@ -37,6 +37,38 @@ end
 	pneumonoultramicroscopicsilicovolcanoconiosis
 end
 
+# Can potentially have an absurdly large instance count.
+let
+	value_type = rand((Int8, UInt8))
+	stride = zero(value_type)
+	while stride < one(value_type)
+		stride = rand(value_type)
+	end
+
+	counter = 0x0
+	current = rand(value_type)
+	instances = [Expr(:(=), Symbol("absurd_", counter), current)]
+	next = current + stride
+	counter += one(counter)
+	while next > current
+		push!(instances, Expr(:(=), Symbol("absurd_", counter), next))
+		current = next
+		next += stride
+		counter += one(counter)
+	end
+
+	enum_expression = Expr(
+		:macrocall,
+		Symbol("@enum"),
+		# This is necessary for proper parsing.
+		LineNumberNode(1),
+		Expr(Symbol("::"), :Absurd, Symbol(value_type)),
+		instances...
+		)
+
+	@eval $enum_expression
+end
+
 #===============================================================================
 CUSTOM
 ===============================================================================#
@@ -80,7 +112,7 @@ CONFIGURATION
 const benevolent_types = [
 	EnumA, EnumB, EnumC, EnumD, EnumE, EnumF, EnumG, Primes,
 	SingletonA, SingletonB, SingletonC, SingletonD,
-	Hippopotomonstrosesquippedaliophobia, ShortKey, CustomInstances
+	Hippopotomonstrosesquippedaliophobia, ShortKey, Absurd, CustomInstances
 	]
 
 const malevolent_types = [

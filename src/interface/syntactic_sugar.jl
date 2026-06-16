@@ -13,16 +13,31 @@ INDEX
 	search_success = false
 	shift = zero(U)
 
-	for variety in content
+	iteration_handler = iterate(content)
+	while !isnothing(iteration_handler)
+		variety, iteration_state = iteration_handler
+
 		search_success = variety == X
 		search_success && break
 		shift += convert(U, required_bits(variety))
+
+		iteration_handler = iterate(content, iteration_state)
 	end
 
 	search_success || throw(KeyError(X))
 
+	skip_mask = false
+	#======================================================================
+	# TODO: Figure out how to enforce this optimisation.
+	# Masking is not required if there are no further bits.
+	skip_mask = isnothing(iteration_handler) || all(
+		x -> iszero(required_bits(x)),
+		Iterators.rest(content, last(iteration_handler))
+		)
+	======================================================================#
+
 	return quote
-		return value_from_bits(X, bit_pack.bits, Val($shift))
+		return value_from_bits(X, bit_pack.bits, Val($shift), Val($skip_mask))
 		end
 
 end
@@ -108,12 +123,29 @@ PROPERTY
 
 end
 
+@inline function Base.propertynames(
+	input::Union{
+		PackedInstancesKeysIterator,
+		PackedInstancesValuesIterator,
+		PackedInstancesContainer
+		},
+	private::Bool = false)
+
+	private_content = fieldnames(typeof(input))
+	return ifelse(
+		private,
+		private_content,
+		empty(private_content)
+		)
+
+end
+
 @generated function Base.getproperty(
 	bit_pack::PackedInstances{U, T}, desired_property::Symbol
 	) where {U <: Unsigned, T <: Tuple}
 
 	content = canonical_form(fieldtypes(T))
-	property_symbols = Symbol.(content)
+	property_symbols = (Symbol(x) for x in content)
 
 	if isempty(property_symbols)
 		# CAUTION: Handle separately due to clashing with tree construction.
@@ -170,7 +202,7 @@ end
 	) where {U <: Unsigned, T <: Tuple}
 
 	content = canonical_form(fieldtypes(T))
-	property_symbols = Symbol.(content)
+	property_symbols = (Symbol(x) for x in content)
 
 	if isempty(property_symbols)
 		# CAUTION: Handle separately due to clashing with tree construction.

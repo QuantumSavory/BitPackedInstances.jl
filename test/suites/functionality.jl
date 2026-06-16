@@ -1,7 +1,7 @@
 
 #==============================================================================#
 
-@testitem "Structures" default_imports = false begin
+@testitem "Functionality" default_imports = false begin
 
 	include("preamble.jl")
 

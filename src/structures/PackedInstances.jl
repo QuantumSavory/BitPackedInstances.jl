@@ -84,7 +84,7 @@ mutable struct PackedInstances{U <: Unsigned, T <: Tuple}
 
 end
 
-# CAUTION: Requires that arguments support calling instances(typeof(argument))
+# CAUTION: Requires that argument types support querying their instances.
 @inline @generated function PackedInstances(
 	::Type{U}, values...
 	) where {U <: Unsigned}
@@ -97,11 +97,11 @@ end
 			end
 	end
 
-	# These are required later for indexed referencing.
-	data_types = collect(values)
+	# These are required later for indexable referencing.
+	data_types = values
 	# Eliminate redundancy.
 	unique_data_types = unique(data_types)
-	shifts = required_bits.(unique_data_types)
+	shifts = (required_bits(x) for x in unique_data_types)
 
 	# CAUTION: The summation may potentially overflow, handle it properly.
 	sums = accumulate(+, shifts; init = zero(U))
@@ -135,21 +135,24 @@ end
 
 end
 
-# CAUTION: Requires that arguments support calling instances(typeof(argument))
+# CAUTION: Requires that argument types support querying their instances.
 @inline @generated function PackedInstances(
 	bit_pack::PackedInstances{U, T}, values...
 	) where {U <: Unsigned, T <: Tuple}
 
 	existing_data_types = fieldtypes(T)
-	existing_shifts = convert.(U, required_bits.(existing_data_types))
-	# These are required later for indexed referencing.
-	new_data_types = collect(values)
+	existing_shifts =
+		(convert(U, required_bits(x)) for x in existing_data_types)
+	# These are required later for idexable referencing.
+	new_data_types = values
 	data_types = [existing_data_types..., new_data_types...]
 	# Eliminate redundancy.
 	data_types = unique!(data_types)
 
 	# CAUTION: The summation may potentially overflow, handle it properly.
-	sums = accumulate(+, required_bits.(data_types); init = zero(U))
+	sums = accumulate(
+		+, (required_bits(x) for x in data_types); init = zero(U)
+		)
 	issorted(sums) && last(sums) <= bit_count(U) ||
 		throw(ArgumentError(error_string_expansion(U, T)))
 
@@ -166,7 +169,7 @@ end
 		output = quote
 			bits = bit_pack.bits
 			end
-	elseif mask == mask_bit_range(U, shift)
+	elseif mask == mask_bit_range(U, shift, zero(U))
 		output = quote
 			bits = zero(U)
 			end
@@ -223,8 +226,10 @@ end
 	) where {U_new <: Unsigned, U <: Unsigned, T <: Tuple}
 
 	content = fieldtypes(T)
-	sum(required_bits.(content); init = zero(U)) <= bit_count(U_new) ||
-		throw(ArgumentError(error_string_conversion(U_new, U, T)))
+	sum(
+		(required_bits(x) for x in content); init = zero(U)
+		) <= bit_count(U_new) ||
+			throw(ArgumentError(error_string_conversion(U_new, U, T)))
 	data_container = _DataContainer(convert(U_new, bit_pack.bits), T)
 	return PackedInstances(data_container)
 

@@ -3,7 +3,7 @@
 
 # CAUTION: This is slightly unsafe due to potential hash clashes.
 @inline function canonical_form(
-	input::Tuple
+	input::Base.AbstractVecOrTuple
 	)
 
 	return sort(input; by = hash)

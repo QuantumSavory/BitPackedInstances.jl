@@ -24,7 +24,7 @@ function error_string_expansion(
 	) where {U <: Unsigned, T <: Tuple}
 
 	available_bits = bit_count(U) - convert(
-		U, sum(required_bits.(fieldtypes(T)); init = zero(U))
+		U, sum((required_bits(x) for x in fieldtypes(T)); init = zero(U))
 		)
 	# This is silly but no edge case shall be left unaccounted for.
 	singular_or_plural = ifelse(isone(available_bits), "bit", "bits")
@@ -45,7 +45,7 @@ function error_string_conversion(
 
 	available_bits = bit_count(U_new)
 	consumed_bits = convert(
-		U, sum(required_bits.(fieldtypes(T)); init = zero(U))
+		U, sum((required_bits(x) for x in fieldtypes(T)); init = zero(U))
 		)
 	# This is silly but no edge case shall be left unaccounted for.
 	available_singular_or_plural = ifelse(
