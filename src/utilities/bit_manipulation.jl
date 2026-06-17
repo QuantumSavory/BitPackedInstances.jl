@@ -106,14 +106,14 @@ end
 			end
 	else
 		mask = mask_bit_range(U, span, zero(U))
-		#======================================================================
+		#=======================================================================
 		# TODO: Figure out how to enforce this optimisation.
 		mask = ifelse(
 			skip_mask,
 			~zero(U),
 			mask_bit_range(U, span, zero(U))
 			)
-		======================================================================#
+		=======================================================================#
 
 		progression = check_arithmetic_progression(X)
 		if progression.validity

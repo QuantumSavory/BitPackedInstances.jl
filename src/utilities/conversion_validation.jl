@@ -32,15 +32,18 @@ function check_arithmetic_progression(
 		count -= one(count)
 		upper = Iterators.drop(integral_values, one(count))
 		lower = Iterators.take(integral_values, count)
-		differences = (first(x) - last(x) for x in zip(upper, lower))
+		differences = (splat(-)(x) for x in zip(upper, lower))
 
 		# TODO: There has to be a cleaner way to achieve this.
 		U = typeof(Unsigned(zero(S)))
 		offset = reinterpret(U, first(integral_values))
 		stride = reinterpret(U, first(differences))
 
+		# Validity entails that there should be no rollover.
+		shifted_values = (reinterpret(U, x) - offset for x in integral_values)
+
 		output = ifelse(
-			allequal(differences) && issorted(integral_values),
+			allequal(differences) && issorted(shifted_values),
 			(
 				validity = true,
 				common_type = S,

@@ -75,7 +75,7 @@ end
 	@inbounds output =
 		(state in eachindex(content)) ?
 		(
-			(content[state], bit_pack[content[state]]),
+			Pair(content[state], bit_pack[content[state]]),
 			successor(content, state)
 		) :
 		nothing

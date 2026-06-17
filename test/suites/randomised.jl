@@ -287,6 +287,11 @@ function test_randomised(
 				@info "The following error message is intentional."
 				bit_pack[new_type] = new_value
 			end
+			@test_throws KeyError begin
+				new_type = rand(leftover_types)
+				new_value = rand(instances(new_type))
+				match_value(bit_pack, new_value)
+			end
 		end
 
 		# Joint iterator correctness.
@@ -302,7 +307,7 @@ function test_randomised(
 				}
 			output &= eltype(bit_pack) == eltype(pairs_itr)
 			for (key, value, key_value) in zip(keys_itr, values_itr, pairs_itr)
-				output &= key == first(key_value) && value == last(key_value)
+				output &= Pair(key, value) == key_value
 				output &= match_value(bit_pack, value)
 			end
 			output

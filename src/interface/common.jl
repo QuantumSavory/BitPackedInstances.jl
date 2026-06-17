@@ -103,10 +103,7 @@ ELTYPE
 ===============================================================================#
 
 @inline function Base.eltype(
-	::Union{
-		PackedInstancesKeysIterator{T},
-		Iterators.Reverse{PackedInstancesKeysIterator{T}}
-		}
+	::Type{PackedInstancesKeysIterator{T}}
 	) where {T <: Tuple}
 
 	return eltype(fieldtypes(T))
@@ -114,26 +111,20 @@ ELTYPE
 end
 
 @inline function Base.eltype(
-	::Union{
-		PackedInstancesValuesIterator{U, T},
-		Iterators.Reverse{PackedInstancesValuesIterator{U, T}}
-		}
+	::Type{PackedInstancesValuesIterator{U, T}}
 	) where {U <: Unsigned, T <: Tuple}
 
 	return eltype(map(x -> first(instances(x)), fieldtypes(T)))
 
 end
 
-# CAUTION: Proper syntax for nested parametric typing.
 @inline function Base.eltype(
-	input::Union{
-		PackedInstances,
-		Iterators.Reverse{<: PackedInstances}
-		}
-	)
+	::Type{PackedInstances{U, T}}
+	) where {U <: Unsigned, T <: Tuple}
 
-	bit_pack = input isa Iterators.Reverse ? input.itr : input
-	return Pair{keytype(bit_pack), valtype(bit_pack)}
+	return Pair{
+		keytype(PackedInstances{U, T}), valtype(PackedInstances{U, T})
+		}
 
 end
 
@@ -147,7 +138,7 @@ EQUALITY
 	)
 
 	return length(left) == length(right) &&
-		all(x -> first(x) == last(x), zip(left, right))
+		all(splat(==), zip(left, right))
 
 end
 
@@ -158,7 +149,7 @@ end
 	)
 
 	return length(left.itr) == length(right.itr) &&
-		all(x -> first(x) == last(x), zip(left.itr, right.itr))
+		all(splat(==), zip(left.itr, right.itr))
 
 end
 
@@ -168,7 +159,7 @@ end
 	)
 
 	return length(left) == length(right) &&
-		all(x -> first(x) == last(x), zip(left, right))
+		all(splat(==), zip(left, right))
 
 end
 
@@ -179,7 +170,7 @@ end
 	)
 
 	return length(left.itr) == length(right.itr) &&
-		all(x -> first(x) == last(x), zip(left.itr, right.itr))
+		all(splat(==), zip(left.itr, right.itr))
 
 end
 

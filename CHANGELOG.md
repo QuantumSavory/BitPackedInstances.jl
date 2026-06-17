@@ -6,6 +6,13 @@ The format of this file is based on [Keep a Changelog](https://keepachangelog.co
 ## [Unreleased]
 
 ### Changed
+- Modify [`README.md`](README.md) to clarify optimal encoding conditions.
+- Rectify non-compliant function signatures for querying el/key/val-type.
+- Rectify incorrectly typed output for `PackedInstances` (reverse) iteration.
+
+## [0.2.0] - 2026-06-17
+
+### Changed
 - Extend method coverage for reversed iterators.
 - Modify property name querying to properly delineate private content.
 - Correct [`README.md`](README.md) for enhanced clarity and to note particular performance advice.
@@ -19,5 +26,6 @@ The format of this file is based on [Keep a Changelog](https://keepachangelog.co
 ## [0.1.0] - 2026-05-30
 Initial release of `BitPackedInstances`.
 
-[Unreleased]: https://github.com/QuantumSavory/BitPackedInstances.jl/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/QuantumSavory/BitPackedInstances.jl/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/QuantumSavory/BitPackedInstances.jl/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/QuantumSavory/BitPackedInstances.jl/releases/tag/v0.1.0
