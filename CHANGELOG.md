@@ -6,10 +6,13 @@ The format of this file is based on [Keep a Changelog](https://keepachangelog.co
 ## [Unreleased]
 
 ### Changed
-- Correct [`README.md`](README.md) for enhanced clarity.
+- Extend method coverage for reversed iterators.
+- Modify property name querying to properly delineate private content.
+- Correct [`README.md`](README.md) for enhanced clarity and to note particular performance advice.
 - Modify [`CHANGELOG.md`](CHANGELOG.md) to conform with [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) guidelines.
 
 ### Fixed
+- Rectify encoding issue for types with numerous integer valued instances.
 - Rectify non-compliant function signature for querying property names.
 - Rectify equivalence issue when hashing key iterator inputs.
 

@@ -31,16 +31,16 @@ end
 
 end
 
-# CAUTION: The shift starts from zero.
+# First set bit is at shifted position, total count up to span.
 @inline function mask_bit_range(
-	::Type{U}, span::Unsigned, shift::Unsigned = zero(U)
+	::Type{U}, span::Unsigned, shift::Unsigned
 	) where {U <: Unsigned}
 
 	return ~(~zero(U) << span) << shift
 
 end
 
-# CAUTION: Requires that length(instances(X)) <= typemax(U)
+# CAUTION: Required bits must not exceed those available in the provided type.
 @inline @generated function bits_from_value(
 	::Type{U}, value::X, ::Val{shift}
 	) where {U <: Unsigned, X, shift}
@@ -53,12 +53,15 @@ end
 		progression = check_arithmetic_progression(X)
 		if progression.validity
 			common_type = progression.common_type
+			# TODO: There has to be a cleaner way to achieve this.
+			unsigned_type = typeof(Unsigned(zero(common_type)))
 			offset = progression.offset
 			stride = progression.stride
 			# No need to worry about rounding due to integral ratio.
 			output = quote
 				return convert(
-					U, div($common_type(value) - $offset, $stride)
+					U,
+					div(reinterpret($unsigned_type, value) - $offset, $stride)
 					) << $shift
 				end
 		else
@@ -90,35 +93,43 @@ end
 
 end
 
-# CAUTION: Requires that length(instances(X)) <= typemax(U)
+# CAUTION: Required bits must not exceed those available in the provided type.
 @inline @generated function value_from_bits(
-	::Type{X}, bits::U, ::Val{shift}
-	) where {X, U <: Unsigned, shift}
+	::Type{X}, bits::U, ::Val{shift}, ::Val{skip_mask}
+	) where {X, U <: Unsigned, shift, skip_mask}
 
-	if iszero(required_bits(X))
+	span = required_bits(X)
+	if iszero(span)
 		singleton = first(instances(X))
 		output = quote
 			return $singleton
 			end
 	else
-		mask = mask_bit_range(U, required_bits(X))
+		mask = mask_bit_range(U, span, zero(U))
+		#======================================================================
+		# TODO: Figure out how to enforce this optimisation.
+		mask = ifelse(
+			skip_mask,
+			~zero(U),
+			mask_bit_range(U, span, zero(U))
+			)
+		======================================================================#
 
 		progression = check_arithmetic_progression(X)
 		if progression.validity
 			common_type = progression.common_type
-			offset = progression.offset
-			stride = progression.stride
 			# TODO: There has to be a cleaner way to achieve this.
 			unsigned_type = typeof(Unsigned(zero(common_type)))
-			# CAUTION: The use of reinterpret allows manipulating raw bits.
+			offset = progression.offset
+			stride = progression.stride
 			output = quote
-				raw = convert($unsigned_type, (bits >> $shift) & $mask)
-				return X($offset + $stride * reinterpret($common_type, raw))
+				temp = convert($unsigned_type, (bits >> $shift) & $mask)
+				return X($offset + $stride * reinterpret($common_type, temp))
 				end
 		else
 			output = quote
-				index = one(U) + ((bits >> $shift) & $mask)
-				@inbounds return instances(X)[index]
+				index = convert(Csize_t, (bits >> $shift) & $mask)
+				@inbounds return instances(X)[index + one(index)]
 				end
 		end
 	end

@@ -9,11 +9,19 @@
 BitPackedInstances is lightweight package that facilitates the bit packing of any data types that support the `instances` querying interface via compact and efficient `@generated` implementations. The provided experience largely resembles that of a typical dictionary to the extent permissible by the prolific abuse of the `Julia` type system that is required in order to achieve the desired functionality.
 
 
-# WARNING
+# WARNINGS
 
 - This package was developed with the primary objective of reducing the register pressure required to handle `@enum` parameters controlling tunable functionality. As such, the intended use case favours encoding statically known types rather than being a general purposes data structure.
 
 - Due to thoroughly employing a large swathe of `@generated` function invocations, world age restrictions are of particular importance. To wit, any content which one wishes to have `PackedInstances` encode must be completely defined before `BitPackedInstances.jl` is imported into the parent scope.
+
+# Performance considerations
+
+This section concerns data types that can be freely interconverted to and form an integral representation.
+
+- Optimal encoding and retrieval is realised when querying the instances returns (upon conversion to integer values) an iterable constituting a uniformly typed, increasingly ordered arithmetic progression.
+
+- Whilst there are other progressions that could be handled just as efficiently, this project shall make no effort to account for all of them given that this is the default `@enum` behaviour. Concerned individuals and/or projects are encouraged to employ suitable translation layers as they see fit.
 
 # Exemplary usage
 
@@ -47,7 +55,7 @@ bit_pack = PackedInstances(bit_pack, sunny, optimistic)
 @assert match_value(bit_pack, optimistic)
 # Eliminate what is no longer needed.
 bit_pack = discard(bit_pack, Mood)
-@assert !(haskey(bit_pack, Mood))
+@assert !haskey(bit_pack, Mood)
 # Wrap it up and pass it through to JuliaGPU kernels.
 @assert bit_pack == unwrap(wrap(bit_pack))
 
