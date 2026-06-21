@@ -34,7 +34,10 @@ end
 end
 
 @inline function Base.keytype(
-	::PackedInstances{U, T}
+	::Union{
+		PackedInstances{U, T},
+		Type{PackedInstances{U, T}}
+		}
 	) where {U <: Unsigned, T <: Tuple}
 
 	return eltype(fieldtypes(T))
@@ -42,7 +45,10 @@ end
 end
 
 @inline function Base.valtype(
-	::PackedInstances{U, T}
+	::Union{
+		PackedInstances{U, T},
+		Type{PackedInstances{U, T}}
+		}
 	) where {U <: Unsigned, T <: Tuple}
 
 	return eltype(map(x -> first(instances(x)), fieldtypes(T)))

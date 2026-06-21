@@ -27,14 +27,14 @@ INDEX
 	search_success || throw(KeyError(X))
 
 	skip_mask = false
-	#======================================================================
+	#===========================================================================
 	# TODO: Figure out how to enforce this optimisation.
 	# Masking is not required if there are no further bits.
 	skip_mask = isnothing(iteration_handler) || all(
 		x -> iszero(required_bits(x)),
 		Iterators.rest(content, last(iteration_handler))
 		)
-	======================================================================#
+	===========================================================================#
 
 	return quote
 		return value_from_bits(X, bit_pack.bits, Val($shift), Val($skip_mask))
@@ -56,12 +56,14 @@ end
 		shift += convert(U, required_bits(variety))
 	end
 
-	if !search_success
-		@error error_string_insertion()
-		throw(KeyError(X))
-	end
 
-	if iszero(required_bits(X))
+	if !search_success
+		# This avoids repeating the error message.
+		output = quote
+			@error error_string_insertion()
+			throw(KeyError(X))
+			end
+	elseif iszero(required_bits(X))
 		output = quote
 			return bit_pack
 			end

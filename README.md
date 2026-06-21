@@ -19,7 +19,7 @@ BitPackedInstances is lightweight package that facilitates the bit packing of an
 
 This section concerns data types that can be freely interconverted to and form an integral representation.
 
-- Optimal encoding and retrieval is realised when querying the instances returns (upon conversion to integer values) an iterable constituting a uniformly typed, increasingly ordered arithmetic progression.
+- Optimal encoding and retrieval is realised when querying the instances returns (upon conversion to a common unsigned type and subtracting the value of the first entry) an iterable constituting an increasingly ordered arithmetic progression.
 
 - Whilst there are other progressions that could be handled just as efficiently, this project shall make no effort to account for all of them given that this is the default `@enum` behaviour. Concerned individuals and/or projects are encouraged to employ suitable translation layers as they see fit.
 
