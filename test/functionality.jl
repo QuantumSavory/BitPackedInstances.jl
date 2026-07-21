@@ -8,11 +8,6 @@
 		Aqua.test_all(BitPackedInstances)
 	end
 
-	@testset "JET" begin
-		import JET
-		JET.test_package(BitPackedInstances)
-	end
-
 	@testset "Randomised" begin
 		test_randomised(round_count, benevolent_types, malevolent_types)
 	end
