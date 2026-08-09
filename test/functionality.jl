@@ -3,14 +3,16 @@
 
 @testitem "Functionality" default_imports = false setup = [Preamble] begin
 
-	@testset "Aqua" begin
-		import Aqua
-		Aqua.test_all(BitPackedInstances)
-	end
+	if get(ENV, "QUANTUMSAVORY_DOWNGRADE_TEST", "") != "true"
+		@testset "Aqua" begin
+			import Aqua
+			Aqua.test_all(BitPackedInstances)
+		end
 
-	@testset "JET" begin
-		import JET
-		JET.test_package(BitPackedInstances)
+		@testset "JET" begin
+			import JET
+			JET.test_package(BitPackedInstances)
+		end
 	end
 
 	@testset "Randomised" begin
