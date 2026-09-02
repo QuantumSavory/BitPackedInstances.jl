@@ -1,17 +1,15 @@
 
 #==============================================================================#
 
-@testitem "Functionality" default_imports = false setup = [Preamble] begin
+@testitem "Functionality" default_imports = false tags = [
+	:functionality
+	] setup = [
+		DependencyManager
+		] begin
 
-	@testset "Aqua" begin
-		import Aqua
-		Aqua.test_all(BitPackedInstances)
-	end
+	DependencyManager.satisfy_dependencies(@__DIR__)
 
-	@testset "JET" begin
-		import JET
-		JET.test_package(BitPackedInstances)
-	end
+	include("preamble.jl")
 
 	@testset "Randomised" begin
 		test_randomised(round_count, benevolent_types, malevolent_types)

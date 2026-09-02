@@ -17,7 +17,7 @@ function test_show(
 
 		if iseven(round_number)
 			# Random length sequence of randomly selected types.
-			selected = Base.first(randperm(type_count), rand(interval))
+			selected = first(randperm(type_count), rand(interval))
 			@inbounds selected_types = types_to_sample[selected]
 		else
 			# Encode everything permissible.
@@ -117,6 +117,8 @@ function test_show(
 		end
 
 	end
+
+	return nothing
 
 end
 

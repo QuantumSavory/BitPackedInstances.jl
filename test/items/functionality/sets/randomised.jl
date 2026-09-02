@@ -280,12 +280,11 @@ function test_randomised(
 					consumed + encoding_bits(new_type)
 			end
 
-			# This displays an error message in the logs, perfectly benign.
+			# This would display an error message, suppress it.
 			@test_throws KeyError begin
 				new_type = rand(leftover_types)
 				new_value = rand(instances(new_type))
-				@info "The following error message is intentional."
-				bit_pack[new_type] = new_value
+				@suppress_err bit_pack[new_type] = new_value
 			end
 			@test_throws KeyError begin
 				new_type = rand(leftover_types)
@@ -336,6 +335,8 @@ function test_randomised(
 		end
 
 	end
+
+	return nothing
 
 end
 
