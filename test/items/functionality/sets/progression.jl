@@ -8,10 +8,7 @@ function test_progression(
 	) where {U <: Unsigned}
 
 	# Only retain what may ever possibly be encoded.
-	types_to_test = filter(Base.Fix{1}(within_capacity, U), types_to_test)
-	isempty(types_to_test) && throw(
-		ArgumentError("Invalid test suite initialisation.")
-		)
+	types_to_test = can_encode_filter(U, types_to_test)
 
 	for target_type in types_to_test
 

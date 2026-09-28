@@ -35,10 +35,7 @@ function test_show(
 	round_count = max(round_count, one(round_count))
 
 	# Only retain what may ever possibly be encoded.
-	types_to_sample = filter(Base.Fix{1}(within_capacity, U), types_to_sample)
-	isempty(types_to_sample) && throw(
-		ArgumentError("Invalid test suite initialisation.")
-		)
+	types_to_sample = can_encode_filter(U, types_to_sample)
 
 	# Utilised extensively throughout.
 	type_count = length(types_to_sample)
@@ -166,9 +163,10 @@ function test_show(
 				x -> repr(mime_type, x; context = limited_io), collection
 				)
 			# Skip the headline.
-			collection_lines = Iterators.drop.(
-				eachline.(IOBuffer.(collection_repr)), one(selected_count)
-				)
+			collection_lines =
+				@. Iterators.drop(
+					eachline(IOBuffer(collection_repr)), one(selected_count)
+					)
 			width_limit_iterator = width - width_offset_iterators
 			width_limit_bit_pack = (width - width_offset_bit_pack) >> 0x1
 

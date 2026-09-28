@@ -38,11 +38,6 @@ end
 	twenty_five = 25
 	thirty_six = 36
 end
-@enum Bases::UInt128 begin
-	binary = 2
-	ternary = 3
-	unary = 1
-end
 
 # Consumes no bits to encode.
 @enum SingletonA begin a_singleton; end
@@ -144,6 +139,56 @@ function Base.instances(::Type{CustomInstances})
 
 end
 
+# Arithmetic progressions come in all forms.
+struct CustomProgression
+
+	value::Integer
+
+	_x_instance() = new(UInt8(1))
+	_y_instance() = new(UInt16(2))
+	_z_instance() = new(UInt32(3))
+	_w_instance() = new(UInt64(4))
+
+	global const x_instance = _x_instance()
+	global const y_instance = _y_instance()
+	global const z_instance = _z_instance()
+	global const w_instance = _w_instance()
+
+end
+
+function Base.instances(::Type{CustomProgression})
+
+	return (x_instance, y_instance, z_instance, w_instance)
+
+end
+
+function Base.Integer(
+	input::CustomProgression
+	)
+
+	return input.value
+
+end
+
+function (::Type{S})(
+	input::CustomProgression
+	) where {S <: Integer}
+
+	return S(input.value)
+
+end
+
+function CustomProgression(
+	input::Integer
+	)
+
+	for element in instances(CustomProgression)
+		input == Integer(element) && return element
+	end
+	throw(ArgumentError("Invalid CustomProgression value: $input"))
+
+end
+
 #===============================================================================
 PACKAGES
 ===============================================================================#
@@ -158,18 +203,22 @@ using Test: @testset, @test, @test_throws
 CONVENIENCE
 ===============================================================================#
 
-@inline function within_capacity(
-	::Type{U}, X::Type
+@inline function can_encode_filter(
+	::Type{U}, content_types::Base.AbstractVecOrTuple{DataType}
 	) where {U <: Unsigned}
 
-	return encoding_bits(X) <= BitPackedInstances.bit_count(U)
+	vacant = ImmutablePackedInstances(U)
+	output = filter(Base.Fix{1}(can_encode, vacant), content_types)
+	isempty(output) && throw(ArgumentError("Invalid test suite initialisation"))
+	return output
 
 end
 
 @inline function capacity_filter(
-	::Type{U}, content_types::Base.AbstractVecOrTuple
+	::Type{U}, content_types::Base.AbstractVecOrTuple{DataType}
 	) where {U <: Unsigned}
 
+	content_types = can_encode_filter(U, content_types)
 	capacity = BitPackedInstances.bit_count(U)
 	consumed = accumulate(
 		+, (encoding_bits(x) for x in content_types); init = zero(U)
@@ -198,7 +247,7 @@ const AbstractPackedInstances_types = (
 
 const benevolent_types = (
 	EnumA, EnumB, EnumC, EnumD, EnumE, EnumF,
-	Primes, Squares, Bases, CustomInstances,
+	Primes, Squares, CustomInstances, CustomProgression,
 	SingletonA, SingletonB, SingletonC, SingletonD,
 	Hippopotomonstrosesquippedaliophobia, ShortKey
 	)

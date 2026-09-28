@@ -14,6 +14,14 @@ TRANSFORMATION
 end
 
 @inline function transformation_step(
+	target::Type, value, ::Val{:reinterpret}
+	)
+
+	return reinterpret(target, value)
+
+end
+
+@inline function transformation_step(
 	target::Type, value, ::Val{:convert}
 	)
 
@@ -103,10 +111,11 @@ VALIDATION
 
 		success_status = false
 		for (to_integer) in (
+			(:identity, :reinterpret),
 			(:identity, :convert),
 			(:identity, :construct),
-			(first(steps.to_integer), :convert),
-			(first(steps.to_integer), :construct)
+			(first(steps.to_integer), :reinterpret),
+			(first(steps.to_integer), :convert)
 			)
 
 
@@ -146,6 +155,7 @@ VALIDATION
 
 		success_status = false
 		for (from_integer) in (
+			:reinterpret,
 			:convert,
 			:construct
 			)
@@ -227,7 +237,7 @@ INTERFACE
 	offset = progression.offset
 	stride = progression.stride
 	# Enables optimiser to eliminate extraneous instruction.
-	mask = convert(U, ~zero(unsigned_type) & ~zero(U))
+	mask = convert(unsigned_type, ~zero(unsigned_type) & ~zero(U))
 
 	@inline temp =
 		transformation_step(Integer, value, Val(first(to_integer)))
@@ -255,17 +265,31 @@ end
 	stride = progression.stride
 	# Enables optimiser to eliminate extraneous instruction.
 	mask = convert(U, ~zero(unsigned_type) & incomplete_mask)
+	# Provides optimiser with a range hint.
+	to_integer_method = ComposedFunction(
+		Base.Fix{1}(
+			Base.Fix{3}(
+				transformation_step,
+				Val(last(to_integer))
+				),
+			S
+			),
+		Base.Fix{1}(
+			Base.Fix{3}(
+				transformation_step,
+				Val(first(to_integer))
+				),
+			Integer
+			)
+		)
+	lower, upper = extrema(to_integer_method, unique_instances(X))
 
 	@inline unsigned_value = muladd(
-		transformation_step(
-			unsigned_type, bits & mask, Val(last(to_integer))
-			),
-		stride,
-		offset
+		convert(unsigned_type, bits & mask), stride, offset
 		)
-	@inline return transformation_step(
-		X, reinterpret(S, unsigned_value), Val(from_integer)
-		)
+	@inline temp = reinterpret(S, unsigned_value)
+	@inline assume(lower <= temp <= upper)
+	@inline return transformation_step(X, temp, Val(from_integer))
 
 end
 
