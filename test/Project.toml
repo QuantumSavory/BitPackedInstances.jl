@@ -12,3 +12,6 @@ projects = ["items/functionality", "items/static_analysis"]
 
 #==============================================================================#
 
+
+[compat]
+Pkg = "1.12"
