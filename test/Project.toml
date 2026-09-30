@@ -12,3 +12,6 @@ projects = ["items/functionality", "items/static_analysis"]
 
 #==============================================================================#
 
+
+[compat]
+Test = "1.11"
