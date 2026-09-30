@@ -12,3 +12,6 @@ projects = ["items/functionality", "items/static_analysis"]
 
 #==============================================================================#
 
+
+[compat]
+TestItemRunner = "1.3.2"
